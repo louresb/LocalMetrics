@@ -1,0 +1,30 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: src/LocalMetrics.Api/Dockerfile
+    ports:
+      - "5085:8080"
+    environment:
+      ASPNETCORE_URLS: http://+:8080
+      ASPNETCORE_ENVIRONMENT: Development
+    networks:
+      - localmetrics-net
+
+  ui:
+    build:
+      context: .
+      dockerfile: src/LocalMetrics.UI/Dockerfile
+    ports:
+      - "7218:8080"
+    environment:
+      ASPNETCORE_URLS: http://+:8080
+      ASPNETCORE_ENVIRONMENT: Development
+    depends_on:
+      - api
+    networks:
+      - localmetrics-net
+
+networks:
+  localmetrics-net:
+    driver: bridge
