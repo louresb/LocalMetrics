@@ -1,26 +1,34 @@
-﻿using System.Diagnostics;
-using System.Runtime.InteropServices;
+﻿using LocalMetrics.Api.Config;
 using LocalMetrics.Api.Models;
+using Microsoft.Extensions.Options;
 
-namespace LocalMetrics.Api.Services;
-
-public class SystemMetricsService
+namespace LocalMetrics.Api.Services
 {
-    public SystemMetrics GetCurrentMetrics()
+    public class SystemMetricsService
     {
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        private readonly ISystemMetricsCollector _collector;
+        private readonly TimeSpan _cacheDuration;
+        private SystemMetrics? _cachedMetrics;
+        private DateTime _lastUpdated;
+
+        public SystemMetricsService(
+            ISystemMetricsCollector collector,
+            IOptions<MetricsCacheSettings> settings)
         {
-            //return GetMetricsWindows();
-        }
-        else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-        {
-            //return GetMetricsLinux();
-        }
-        else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
-        {
-            //return GetMetricsMac();
+            _collector = collector;
+            _cacheDuration = TimeSpan.FromSeconds(settings.Value.DurationInSeconds);
         }
 
-        throw new PlatformNotSupportedException("Operating system not supported.");
+        public SystemMetrics GetCurrentMetrics()
+        {
+            if (_cachedMetrics != null && DateTime.UtcNow - _lastUpdated < _cacheDuration)
+            {
+                return _cachedMetrics;
+            }
+
+            _cachedMetrics = _collector.GetMetrics();
+            _lastUpdated = DateTime.UtcNow;
+            return _cachedMetrics;
+        }
     }
 }
