@@ -1,0 +1,160 @@
+﻿@page "/dashboard"
+@using LocalMetrics.Web.Models
+@using LocalMetrics.Web.Services
+@using MudBlazor
+@implements IAsyncDisposable
+@inject MetricsService MetricsService
+
+<h1 class="text-2xl font-bold mb-4">Metrics Dashboard</h1>
+
+@if (_metrics is null)
+{
+    <MudProgressCircular Color="Color.Primary" Size="Size.Large" Indeterminate="true" />
+}
+else
+{
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+
+        <div class="p-4 shadow rounded bg-white" style="min-height: 200px;">
+            <div class="d-flex align-items-start" style="gap: 1rem;">
+                <h2 class="fw-semibold mb-0 flex-shrink-0" style="white-space: nowrap;">CPU Usage</h2>
+                <div style="height: @ChartHeight; width: @ChartWidth; flex-shrink: 0;">
+                    <MudChart ChartType="ChartType.Line"
+                              ChartOptions="@_chartOptions"
+                              ChartSeries="@_seriesCPU"
+                              Height="@ChartHeight"
+                              Width="@ChartWidth" />
+                </div>
+            </div>
+            <p class="fs-5 mt-0 mb-0">@($"{_metrics.CpuUsage:F2}%")</p>
+        </div>
+
+        <div class="p-4 shadow rounded bg-white" style="min-height: 200px;">
+            <div class="d-flex align-items-start" style="gap: 1rem;">
+                <h2 class="fw-semibold mb-0 flex-shrink-0" style="white-space: nowrap;">RAM Usage</h2>
+                <div style="height: @ChartHeight; width: @ChartWidth; flex-shrink: 0;">
+                    <MudChart ChartType="ChartType.Line"
+                              ChartOptions="@_chartOptions"
+                              ChartSeries="@_seriesRam"
+                              Height="@ChartHeight"
+                              Width="@ChartWidth" />
+                </div>
+            </div>
+            <p class="fs-5 mt-0 mb-0">@($"{_metrics.RamUsage:F2}%")</p>
+        </div>
+
+        <div class="p-4 shadow rounded bg-white" style="min-height: 200px;">
+            <div class="d-flex align-items-start" style="gap: 1rem;">
+                <h2 class="fw-semibold mb-0 flex-shrink-0" style="white-space: nowrap;">Disk Usage</h2>
+                <div style="height: @ChartHeight; width: @ChartWidth; flex-shrink: 0;">
+                    <MudChart ChartType="ChartType.Pie"
+                              InputData="@dataDisk"
+                              Height="@ChartHeight"
+                              Width="@ChartWidth" />
+                </div>
+            </div>
+            <p class="fs-5 mt-0 mb-0">@($"{_metrics.DiskUsage:F2}%")</p>
+        </div>
+    </div>
+}
+
+@code {
+    private const string ChartHeight = "150px";
+    private const string ChartWidth = "700px";
+
+    private SystemMetrics? _metrics;
+    private PeriodicTimer? _timer;
+    private readonly CancellationTokenSource _cts = new();
+
+    private List<SystemMetrics> _history = new();
+    private string[] _timestamps = Array.Empty<string>();
+
+    private ChartOptions _chartOptions = new()
+    {
+        XAxisLabelPosition = XAxisLabelPosition.None
+    };
+
+    private List<ChartSeries> _seriesCPU = new() { new ChartSeries() };
+    private List<ChartSeries> _seriesRam = new() { new ChartSeries() };
+    private List<ChartSeries> _seriesDisk = new() { new ChartSeries() };
+
+    private double[] dataDisk = new double[] { 0, 0 };
+    private readonly string[] labelsDisk = new[] { "Used", "Free" };
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadMetricsAsync();
+        _timer = new PeriodicTimer(TimeSpan.FromSeconds(5));
+        _ = Task.Run(RefreshLoopAsync);
+    }
+
+    private async Task RefreshLoopAsync()
+    {
+        try
+        {
+            while (await _timer!.WaitForNextTickAsync(_cts.Token))
+            {
+                if (_cts.Token.IsCancellationRequested) break;
+
+                await InvokeAsync(async () =>
+                {
+                    await LoadMetricsAsync();
+                    StateHasChanged();
+                });
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"[RefreshLoop Error] {ex}");
+        }
+    }
+
+    private async Task LoadMetricsAsync()
+    {
+        try
+        {
+            var metric = await MetricsService.GetSystemMetricsAsync();
+            if (metric is not null)
+            {
+                _metrics = metric;
+                _history.Add(metric);
+
+                if (_history.Count > 20)
+                    _history.RemoveAt(0);
+
+                AtualizarGrafico();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"[LoadMetricsAsync Error] {ex}");
+        }
+    }
+
+    private void AtualizarGrafico()
+    {
+        if (_metrics is null) return;
+
+        dataDisk = new[]
+        {
+            (double)_metrics.DiskUsage,
+            100 - (double)_metrics.DiskUsage
+        };
+
+        _timestamps = _history.Select(m => m.Timestamp.ToString("HH:mm:ss")).ToArray();
+
+        _seriesCPU[0].Data = _history.Select(m => (double)m.CpuUsage).ToArray();
+        _seriesRam[0].Data = _history.Select(m => (double)m.RamUsage).ToArray();
+        _seriesDisk[0].Data = _history.Select(m => (double)m.DiskUsage).ToArray();
+    }
+
+    public ValueTask DisposeAsync()
+    {
+        try { _cts.Cancel(); } catch { }
+
+        _timer?.Dispose();
+        _cts.Dispose();
+
+        return ValueTask.CompletedTask;
+    }
+}

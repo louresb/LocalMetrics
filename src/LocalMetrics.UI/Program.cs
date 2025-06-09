@@ -2,6 +2,7 @@ using LocalMetrics.UI.Components;
 using LocalMetrics.UI.Config;
 using LocalMetrics.Web.Services;
 using Microsoft.Extensions.Options;
+using MudBlazor.Services;
 
 var builder = WebApplication.CreateBuilder(new WebApplicationOptions
 {
@@ -26,6 +27,8 @@ builder.Services.AddHttpClient<MetricsService>((sp, client) =>
 
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
+
+builder.Services.AddMudServices();
 
 var app = builder.Build();
 

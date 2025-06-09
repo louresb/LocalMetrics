@@ -1,27 +1,24 @@
 services:
-  api:
-    build:
-      context: .
-      dockerfile: src/LocalMetrics.Api/Dockerfile
-    ports:
-      - "5085:8080"
-    environment:
-      ASPNETCORE_URLS: http://+:8080
-      ASPNETCORE_ENVIRONMENT: Development
-    networks:
-      - localmetrics-net
-
   ui:
     build:
       context: .
       dockerfile: src/LocalMetrics.UI/Dockerfile
-    ports:
-      - "7218:8080"
     environment:
       ASPNETCORE_URLS: http://+:8080
       ASPNETCORE_ENVIRONMENT: Development
+    expose:
+      - "8080" 
+    networks:
+      - localmetrics-net
+
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
     depends_on:
-      - api
+      - ui
     networks:
       - localmetrics-net
 
