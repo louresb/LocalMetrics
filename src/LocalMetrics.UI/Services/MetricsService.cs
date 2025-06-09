@@ -18,12 +18,31 @@ public class MetricsService
             var encrypted = await _http.GetStringAsync("api/systemmetrics");
             var response = await _http.PostAsJsonAsync("api/systemmetrics/decrypt", encrypted);
             response.EnsureSuccessStatusCode();
-            return await response.Content.ReadFromJsonAsync<SystemMetrics>();
+
+            var metrics = await response.Content.ReadFromJsonAsync<SystemMetrics>();
+            return metrics;
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"[MetricsService] Erro: {ex.Message}");
+            Console.WriteLine($"[MetricsService] Erro ao obter métricas: {ex.Message}");
             return null;
         }
+    }
+
+    public async Task<List<SystemMetrics>> GetSystemMetricsHistoryAsync(int count = 20)
+    {
+        var history = new List<SystemMetrics>();
+
+        for (int i = 0; i < count; i++)
+        {
+            var metric = await GetSystemMetricsAsync();
+            if (metric != null)
+            {
+                history.Add(metric);
+                await Task.Delay(500); // Simula tempo entre coletas
+            }
+        }
+
+        return history;
     }
 }

@@ -7,7 +7,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{4CE6B616-A5B
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LocalMetrics.Api", "src\LocalMetrics.Api\LocalMetrics.Api.csproj", "{5017C31F-BD93-40AA-9B01-AF3E943E5094}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LocalMetrics.UI", "src\LocalMetrics.UI\LocalMetrics.UI.csproj", "{A59CCC35-A310-4ECB-AC7A-76ACBF9C1BB2}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LocalMetrics.UI", "src\LocalMetrics.UI\LocalMetrics.UI.csproj", "{9502F914-83BB-C88C-DE29-22B3F3D6E7D5}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -19,17 +19,16 @@ Global
 		{5017C31F-BD93-40AA-9B01-AF3E943E5094}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5017C31F-BD93-40AA-9B01-AF3E943E5094}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5017C31F-BD93-40AA-9B01-AF3E943E5094}.Release|Any CPU.Build.0 = Release|Any CPU
-		{A59CCC35-A310-4ECB-AC7A-76ACBF9C1BB2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{A59CCC35-A310-4ECB-AC7A-76ACBF9C1BB2}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{A59CCC35-A310-4ECB-AC7A-76ACBF9C1BB2}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{A59CCC35-A310-4ECB-AC7A-76ACBF9C1BB2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9502F914-83BB-C88C-DE29-22B3F3D6E7D5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9502F914-83BB-C88C-DE29-22B3F3D6E7D5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9502F914-83BB-C88C-DE29-22B3F3D6E7D5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9502F914-83BB-C88C-DE29-22B3F3D6E7D5}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{5017C31F-BD93-40AA-9B01-AF3E943E5094} = {4CE6B616-A5B5-42B7-A7D6-EE309C0EC4B1}
-		{A59CCC35-A310-4ECB-AC7A-76ACBF9C1BB2} = {4CE6B616-A5B5-42B7-A7D6-EE309C0EC4B1}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {0222CB1E-C5A5-4483-83E4-E9F463C1512F}
