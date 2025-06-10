@@ -33,6 +33,8 @@ builder.Services.Configure<EncryptionSettings>(
 builder.Services.AddSingleton<SystemMetricsService>();
 builder.Services.AddSingleton<EncryptionService>();
 
+builder.WebHost.UseUrls("http://0.0.0.0:5050");
+
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
@@ -42,7 +44,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-app.UseAuthorization();
+
 app.MapControllers();
 
 app.Run();

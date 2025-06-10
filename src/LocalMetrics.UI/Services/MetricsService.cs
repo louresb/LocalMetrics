@@ -39,7 +39,7 @@ public class MetricsService
             if (metric != null)
             {
                 history.Add(metric);
-                await Task.Delay(500); // Simula tempo entre coletas
+                await Task.Delay(500); 
             }
         }
 
