@@ -1,8 +1,10 @@
 ﻿using LocalMetrics.Api.Models;
+using System.Runtime.Versioning;
 using System.Diagnostics;
 
 namespace LocalMetrics.Api.Services;
 
+[SupportedOSPlatform("windows")]
 public class WindowsSystemMetricsCollector : ISystemMetricsCollector
 {
     public SystemMetrics GetMetrics()
