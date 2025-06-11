@@ -12,8 +12,7 @@
 - AES-encrypted API responses  
 - Prometheus-compatible `/metrics` export  
 - Runs on Windows, macOS, and Linux  
-- UI served via Docker or `dotnet run`  
-- No agents, no external setup — just run and monitor  
+- UI served via Docker or `dotnet run`   
 
 ![Demo GIF of LocalMetrics](./media/demo.gif)
 
@@ -80,6 +79,10 @@ curl http://localhost:5050/metrics
 # Metrics are cached in memory (default: 5 seconds) to reduce system load.
 
 # API responses are encrypted using AES with a key defined in appsettings.json.
+# Optionally, you can override it using the ENCRYPTION_KEY environment variable:
+#   $env:ENCRYPTION_KEY = "your-aes-key"      # PowerShell (Windows)
+#   export ENCRYPTION_KEY=your-aes-key        # macOS / Linux
+
 # The UI fetches encrypted data every 5 seconds and sends it to the API for decryption.
 
 # When using Docker, nginx proxies:

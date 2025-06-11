@@ -27,8 +27,18 @@ else
 builder.Services.Configure<MetricsCacheSettings>(
     builder.Configuration.GetSection("MetricsCache"));
 
-builder.Services.Configure<EncryptionSettings>(
-    builder.Configuration.GetSection("Encryption"));
+builder.Services.Configure<EncryptionSettings>(options =>
+{
+    var configKey = builder.Configuration["Encryption:Key"];
+    var envKey = Environment.GetEnvironmentVariable("ENCRYPTION_KEY");
+
+    var key = !string.IsNullOrWhiteSpace(envKey) ? envKey : configKey;
+
+    if (string.IsNullOrWhiteSpace(key))
+        throw new InvalidOperationException("Encryption key is not configured.");
+
+    options.Key = key;
+});
 
 builder.Services.AddSingleton<SystemMetricsService>();
 builder.Services.AddSingleton<EncryptionService>();
