@@ -14,8 +14,6 @@
 - Runs on Windows, macOS, and Linux  
 - UI served via Docker or `dotnet run`   
 
-![Demo GIF of LocalMetrics](./media/demo.gif)
-
 ---
 ## 🚀 Quick Start
 
