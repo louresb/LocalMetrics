@@ -9,6 +9,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LocalMetrics.Api", "src\Loc
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LocalMetrics.UI", "src\LocalMetrics.UI\LocalMetrics.UI.csproj", "{9502F914-83BB-C88C-DE29-22B3F3D6E7D5}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{A10B33AB-87F3-4D56-9FBB-9167BE89D726}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LocalMetrics.Api.Tests", "tests\LocalMetrics.Api.Tests\LocalMetrics.Api.Tests.csproj", "{0E94F1A2-5B62-462C-BAE2-804E3E68BB66}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -23,6 +27,10 @@ Global
 		{9502F914-83BB-C88C-DE29-22B3F3D6E7D5}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9502F914-83BB-C88C-DE29-22B3F3D6E7D5}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9502F914-83BB-C88C-DE29-22B3F3D6E7D5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0E94F1A2-5B62-462C-BAE2-804E3E68BB66}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0E94F1A2-5B62-462C-BAE2-804E3E68BB66}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0E94F1A2-5B62-462C-BAE2-804E3E68BB66}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0E94F1A2-5B62-462C-BAE2-804E3E68BB66}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -30,6 +38,7 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{5017C31F-BD93-40AA-9B01-AF3E943E5094} = {4CE6B616-A5B5-42B7-A7D6-EE309C0EC4B1}
 		{9502F914-83BB-C88C-DE29-22B3F3D6E7D5} = {4CE6B616-A5B5-42B7-A7D6-EE309C0EC4B1}
+		{0E94F1A2-5B62-462C-BAE2-804E3E68BB66} = {A10B33AB-87F3-4D56-9FBB-9167BE89D726}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {0222CB1E-C5A5-4483-83E4-E9F463C1512F}

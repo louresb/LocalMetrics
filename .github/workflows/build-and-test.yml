@@ -1,26 +1,47 @@
-name: .NET Build
+name: CI
 
 on:
   push:
-    branches: [ "**" ]
+    branches: [main]
   pull_request:
-    branches: [ "**" ]
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  DOTNET_NOLOGO: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
+  build-test:
+    name: Build and test (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v4
-      with:
-        dotnet-version: 8.0.x
+      - name: Setup .NET
+        uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          dotnet-version: 10.0.x
 
-    - name: Restore dependencies
-      run: dotnet restore
+      - name: Restore dependencies
+        run: dotnet restore LocalMetrics.sln
 
-    - name: Build solution
-      run: dotnet build --configuration Release --no-restore
+      - name: Build solution
+        run: dotnet build LocalMetrics.sln --configuration Release --no-restore -p:ContinuousIntegrationBuild=true
+
+      - name: Run tests
+        run: dotnet test LocalMetrics.sln --configuration Release --no-build
