@@ -27,23 +27,8 @@ else
 builder.Services.Configure<MetricsCacheSettings>(
     builder.Configuration.GetSection("MetricsCache"));
 
-builder.Services.Configure<EncryptionSettings>(options =>
-{
-    var configKey = builder.Configuration["Encryption:Key"];
-    var envKey = Environment.GetEnvironmentVariable("ENCRYPTION_KEY");
-
-    var key = !string.IsNullOrWhiteSpace(envKey) ? envKey : configKey;
-
-    if (string.IsNullOrWhiteSpace(key))
-        throw new InvalidOperationException("Encryption key is not configured.");
-
-    options.Key = key;
-});
-
+builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddSingleton<SystemMetricsService>();
-builder.Services.AddSingleton<EncryptionService>();
-
-builder.WebHost.UseUrls("http://0.0.0.0:5050");
 
 var app = builder.Build();
 
@@ -52,8 +37,6 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
-
-app.UseHttpsRedirection();
 
 app.MapControllers();
 

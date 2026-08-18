@@ -1,48 +1,32 @@
-﻿using LocalMetrics.Web.Models;
+using LocalMetrics.UI.Models;
 
-namespace LocalMetrics.Web.Services;
+namespace LocalMetrics.UI.Services;
 
 public class MetricsService
 {
     private readonly HttpClient _http;
+    private readonly ILogger<MetricsService> _logger;
 
-    public MetricsService(HttpClient http)
+    public MetricsService(HttpClient http, ILogger<MetricsService> logger)
     {
         _http = http;
+        _logger = logger;
     }
 
-    public async Task<SystemMetrics?> GetSystemMetricsAsync()
+    public async Task<SystemMetrics?> GetSystemMetricsAsync(CancellationToken cancellationToken = default)
     {
         try
         {
-            var encrypted = await _http.GetStringAsync("api/systemmetrics");
-            var response = await _http.PostAsJsonAsync("api/systemmetrics/decrypt", encrypted);
-            response.EnsureSuccessStatusCode();
-
-            var metrics = await response.Content.ReadFromJsonAsync<SystemMetrics>();
-            return metrics;
+            return await _http.GetFromJsonAsync<SystemMetrics>("api/systemmetrics", cancellationToken);
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"[MetricsService] Erro ao obter métricas: {ex.Message}");
+            _logger.LogWarning(ex, "Unable to retrieve system metrics from the local API.");
             return null;
         }
-    }
-
-    public async Task<List<SystemMetrics>> GetSystemMetricsHistoryAsync(int count = 20)
-    {
-        var history = new List<SystemMetrics>();
-
-        for (int i = 0; i < count; i++)
-        {
-            var metric = await GetSystemMetricsAsync();
-            if (metric != null)
-            {
-                history.Add(metric);
-                await Task.Delay(500); 
-            }
-        }
-
-        return history;
     }
 }

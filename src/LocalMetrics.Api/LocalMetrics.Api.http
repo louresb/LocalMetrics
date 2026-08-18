@@ -1,6 +1,11 @@
-@LocalMetrics.Api_HostAddress = http://localhost:5085
+@LocalMetrics.Api_HostAddress = http://localhost:5050
 
-GET {{LocalMetrics.Api_HostAddress}}/weatherforecast/
+GET {{LocalMetrics.Api_HostAddress}}/api/systemmetrics
 Accept: application/json
+
+###
+
+GET {{LocalMetrics.Api_HostAddress}}/metrics
+Accept: text/plain
 
 ###

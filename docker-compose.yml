@@ -5,9 +5,12 @@ services:
       dockerfile: src/LocalMetrics.UI/Dockerfile
     environment:
       ASPNETCORE_URLS: http://+:8080
-      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_ENVIRONMENT: Production
+      ApiSettings__BaseUrl: http://host.docker.internal:5050
     expose:
-      - "8080" 
+      - "8080"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     networks:
       - localmetrics-net
 
@@ -16,9 +19,11 @@ services:
       context: ./nginx
       dockerfile: Dockerfile
     ports:
-      - "80:80"
+      - "127.0.0.1:80:80"
     depends_on:
       - ui
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     networks:
       - localmetrics-net
 

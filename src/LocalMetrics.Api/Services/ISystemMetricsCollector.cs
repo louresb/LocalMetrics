@@ -1,4 +1,6 @@
-﻿using LocalMetrics.Api.Models;
+using LocalMetrics.Api.Models;
+
+namespace LocalMetrics.Api.Services;
 
 public interface ISystemMetricsCollector
 {

@@ -1,6 +1,7 @@
 ﻿using System.Text.Json.Serialization;
 
-namespace LocalMetrics.Web.Models;
+namespace LocalMetrics.UI.Models;
+
 public class SystemMetrics
 {
     [JsonPropertyName("cpuUsage")]

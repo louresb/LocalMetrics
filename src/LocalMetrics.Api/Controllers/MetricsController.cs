@@ -33,6 +33,6 @@ public class MetricsController : ControllerBase
         sb.AppendLine("# TYPE disk_usage gauge");
         sb.AppendLine($"disk_usage {metrics.DiskUsage.ToString("F2", System.Globalization.CultureInfo.InvariantCulture)}");
 
-        return Content(sb.ToString(), "text/plain");
+        return Content(sb.ToString(), "text/plain; version=0.0.4; charset=utf-8");
     }
 }
