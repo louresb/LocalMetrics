@@ -1,103 +1,91 @@
 # LocalMetrics
 
-![.NET](https://img.shields.io/badge/.NET-8.0-512BD4?)
-[![Build Status](https://github.com/louresb/LocalMetrics/actions/workflows/build-and-test.yml/badge.svg)](https://github.com/louresb/LocalMetrics/actions/workflows/build-and-test.yml)
-[![License](https://img.shields.io/badge/license-MIT-F4A261)](https://github.com/louresb/LocalMetrics/blob/main/LICENSE)
+![.NET](https://img.shields.io/badge/.NET-10.0-512BD4)
+[![CI](https://github.com/louresb/LocalMetrics/actions/workflows/build-and-test.yml/badge.svg?branch=main)](https://github.com/louresb/LocalMetrics/actions/workflows/build-and-test.yml?query=branch%3Amain)
 
-**LocalMetrics** is a lightweight, cross-platform monitoring tool that captures real-time system metrics (CPU, memory, disk) from the machine where it runs and displays them in a Blazor-based dashboard.
+LocalMetrics is a cross-platform proof of concept that collects CPU, memory and disk usage from the machine where its API runs. It presents the current values in a Blazor dashboard and exposes a Prometheus-compatible endpoint.
 
-![video-output-173CA63B-D9B0-4E59-BAFA-C4D25DF924A8-3-ezgif com-video-to-gif-converter](https://github.com/user-attachments/assets/afc6b02e-7949-4628-a056-78951547da3d)
+## Architecture
 
-- Real-time local system metrics  
-- AES-encrypted API responses  
-- Prometheus-compatible `/metrics` export  
-- Runs on Windows, macOS, and Linux  
-- UI served via Docker or `dotnet run`   
+```mermaid
+flowchart LR
+    OS["Windows, Linux or macOS collector"] --> Cache["5-second in-memory cache"]
+    Cache --> API["ASP.NET Core API"]
+    API --> JSON["JSON endpoint"]
+    API --> Prometheus["Prometheus endpoint"]
+    JSON --> UI["Blazor dashboard"]
+    NGINX["NGINX"] --> UI
+    NGINX --> API
+```
 
----
-## 🚀 Quick Start
+- An operating-system-specific collector reads CPU, memory and disk usage.
+- `SystemMetricsService` caches samples to avoid collecting them on every request.
+- The API exposes both application-friendly JSON and Prometheus text formats.
+- The Blazor Server UI keeps a short in-memory history for its charts.
+- Docker Compose can host the UI behind NGINX while the API runs on the monitored host.
 
-<div align="center">
-  <table>
-    <tr>
-      <td width="40%" valign="top">
-        <p align="left">
-          To get started, first download the latest release and extract the ZIP file.
-        </p>
-      </td>
-      <td width="60%" align="center">
-        <img src="https://github.com/user-attachments/assets/913d39f6-5244-4cea-b6ee-62bd2e6feaf4" alt="Download Screen" width="600"/>
-      </td>
-    </tr>
-  </table>
-</div>
+## Run locally
 
-### Windows / macOS
+Requirements:
 
-1. Open the extracted folder.
-   
-2. Run the backend:
-   ```bash
-   ./LocalMetrics.Api.exe      # Windows
-   ./LocalMetrics.Api          # macOS
-   ```
-3. From the root folder, run the UI:
-   ```bash
-   docker compose up
-   ```
-   Or if running locally:
-   ```bash
-   dotnet run --project src/LocalMetrics.UI
-   ```
+- [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0), version 10.0.300 or newer
+- Docker, only for the containerized UI and NGINX option
 
-Then access: [http://localhost](http://localhost)
+Start the API on the machine you want to monitor:
 
----
-
-
-
-## API Endpoints
-
-- `GET /metrics` — Prometheus-compatible metrics in plaintext  
-- `GET /api/SystemMetrics` — Returns encrypted system metrics  
-- `POST /api/SystemMetrics/decrypt` — Decrypts and returns readable system metrics  
-
-Example:
 ```bash
+dotnet run --project src/LocalMetrics.Api
+```
+
+For a fully local development run, open another terminal and start the UI:
+
+```bash
+dotnet run --project src/LocalMetrics.UI
+```
+
+Open `http://localhost:5133`.
+
+To run the UI through Docker and NGINX, the containers need to reach the API on the host. Start the API with an explicit container-accessible binding:
+
+```bash
+dotnet run --project src/LocalMetrics.Api -- --urls http://0.0.0.0:5050
+```
+
+Then start the UI and reverse proxy:
+
+```bash
+docker compose up --build
+```
+
+Open `http://localhost`. NGINX is published only on the host loopback interface. On systems that still use Compose v1, run `docker-compose up --build` instead.
+
+## API
+
+| Endpoint | Purpose |
+| --- | --- |
+| `GET /api/systemmetrics` | Current CPU, memory and disk sample as JSON |
+| `GET /metrics` | The same sample in Prometheus text format |
+| `GET /swagger` | Interactive API documentation in the Development environment |
+
+The API listens on port `5050` by default. For example:
+
+```bash
+curl http://localhost:5050/api/systemmetrics
 curl http://localhost:5050/metrics
 ```
-> ⚠ Port 5050 is used by default.
 
----
+## Tests and CI
 
-## ⚙️ Configuration
+Run the complete suite with:
 
 ```bash
-# The API selects a system metrics collector based on the OS (Windows, Linux or macOS).
-# Metrics are cached in memory (default: 5 seconds) to reduce system load.
-
-# API responses are encrypted using AES with a key defined in appsettings.json.
-# Optionally, you can override it using the ENCRYPTION_KEY environment variable:
-#   $env:ENCRYPTION_KEY = "your-aes-key"      # PowerShell (Windows)
-#   export ENCRYPTION_KEY=your-aes-key        # macOS / Linux
-
-# The UI fetches encrypted data every 5 seconds and sends it to the API for decryption.
-
-# When using Docker, nginx proxies:
-# - "/"      → Blazor UI
-# - "/api/*" → API running on the host via host.docker.internal
-
-# The UI reads the API base URL from appsettings.json (local or Docker-specific).
-
+dotnet test LocalMetrics.sln --configuration Release
 ```
 
----
-## Contributing
+GitHub Actions builds the solution, runs the unit tests and exercises the native collector on Linux, Windows and macOS.
 
-Contributions are welcome! If you encounter any issues or have suggestions for improvements, feel free to open an issue or submit a pull request.
+## Scope and limitations
 
----
+LocalMetrics intentionally focuses on a single machine and a small set of live metrics. It does not provide persistence, authentication, alerting, remote fleet management or production-grade telemetry storage. Local runs bind to `127.0.0.1`; the Docker command above opts into `0.0.0.0` so containers can reach the host API and should be used only on a trusted development machine with an appropriate firewall.
 
-## License
-
-[MIT License](https://github.com/louresb/LocalMetrics/blob/main/LICENSE) © [Bruno Loures](https://github.com/louresb)
+Contributions and bug reports are welcome through issues and pull requests.

@@ -1,7 +1,6 @@
-﻿namespace LocalMetrics.Api.Config
+namespace LocalMetrics.Api.Config;
+
+public sealed class MetricsCacheSettings
 {
-    public class MetricsCacheSettings
-    {
-        public int DurationInSeconds { get; set; }
-    }
+    public int DurationInSeconds { get; set; }
 }
