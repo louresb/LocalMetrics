@@ -8,7 +8,7 @@ LocalMetrics is a cross-platform proof of concept that collects CPU, memory and 
 ## Dashboard
 
 <p align="center">
-  <img src="docs/media/localmetrics-dashboard.gif" alt="Animated LocalMetrics dashboard showing CPU, memory and disk metrics updating in real time" width="600" />
+  <img src="https://raw.githubusercontent.com/louresb/LocalMetrics/main/docs/media/localmetrics-dashboard.gif" alt="Animated LocalMetrics dashboard showing CPU, memory and disk metrics updating in real time" width="600" />
 </p>
 
 ## Architecture
