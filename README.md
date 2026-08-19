@@ -3,7 +3,13 @@
 ![.NET](https://img.shields.io/badge/.NET-10.0-512BD4)
 [![CI](https://github.com/louresb/LocalMetrics/actions/workflows/build-and-test.yml/badge.svg?branch=main)](https://github.com/louresb/LocalMetrics/actions/workflows/build-and-test.yml?query=branch%3Amain)
 
-LocalMetrics is a cross-platform proof of concept that collects CPU, memory and disk usage from the machine where its API runs. It presents the current values in a Blazor dashboard and exposes a Prometheus-compatible endpoint.
+LocalMetrics is a cross-platform proof of concept that collects CPU, memory and disk usage from the machine where its API runs. It presents the current values in a Blazor dashboard built with [MudBlazor](https://mudblazor.com/) and exposes a Prometheus-compatible endpoint.
+
+## Dashboard
+
+<p align="center">
+  <img src="docs/media/localmetrics-dashboard.gif" alt="Animated LocalMetrics dashboard showing CPU, memory and disk metrics updating in real time" width="600" />
+</p>
 
 ## Architecture
 
@@ -21,7 +27,7 @@ flowchart LR
 - An operating-system-specific collector reads CPU, memory and disk usage.
 - `SystemMetricsService` caches samples to avoid collecting them on every request.
 - The API exposes both application-friendly JSON and Prometheus text formats.
-- The Blazor Server UI keeps a short in-memory history for its charts.
+- The Blazor Server UI uses MudBlazor charts and keeps a short in-memory history for them.
 - Docker Compose can host the UI behind NGINX while the API runs on the monitored host.
 
 ## Run locally
