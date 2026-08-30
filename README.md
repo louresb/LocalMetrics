@@ -3,95 +3,77 @@
 ![.NET](https://img.shields.io/badge/.NET-10.0-512BD4)
 [![CI](https://github.com/louresb/LocalMetrics/actions/workflows/build-and-test.yml/badge.svg?branch=main)](https://github.com/louresb/LocalMetrics/actions/workflows/build-and-test.yml?query=branch%3Amain)
 
-LocalMetrics is a cross-platform proof of concept that collects CPU, memory and disk usage from the machine where its API runs. It presents the current values in a Blazor dashboard built with [MudBlazor](https://mudblazor.com/) and exposes a Prometheus-compatible endpoint.
+LocalMetrics is a cross-platform proof of concept that collects CPU, memory, and disk usage from the machine where it runs. A single native ASP.NET Core process serves a real-time Blazor dashboard, a JSON API, and a Prometheus-compatible endpoint.
 
 ## Dashboard
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/louresb/LocalMetrics/main/docs/media/localmetrics-dashboard.gif" alt="Animated LocalMetrics dashboard showing CPU, memory and disk metrics updating in real time" width="600" />
+  <img src="https://raw.githubusercontent.com/louresb/LocalMetrics/main/docs/media/localmetrics-dashboard.gif" alt="Original LocalMetrics prototype running on macOS and showing CPU, memory, and disk metrics in real time" width="600" />
 </p>
+
+<p align="center"><sub>Original prototype running on macOS under load.</sub></p>
 
 ## Architecture
 
-```mermaid
+~~~mermaid
 flowchart LR
-    OS["Windows, Linux or macOS collector"] --> Cache["5-second in-memory cache"]
-    Cache --> API["ASP.NET Core API"]
-    API --> JSON["JSON endpoint"]
-    API --> Prometheus["Prometheus endpoint"]
-    JSON --> UI["Blazor dashboard"]
-    NGINX["NGINX"] --> UI
-    NGINX --> API
-```
+    OS["Windows, Linux, or macOS"] --> Collector["Native platform collector"]
+    Collector --> Cache["5-second in-memory cache"]
+    Cache --> Host["ASP.NET Core host"]
+    Host --> UI["Blazor dashboard"]
+    Host --> JSON["JSON API"]
+    Host --> Prometheus["Prometheus endpoint"]
+    NGINX["Optional NGINX proxy"] --> Host
+~~~
 
-- An operating-system-specific collector reads CPU, memory and disk usage.
-- `SystemMetricsService` caches samples to avoid collecting them on every request.
-- The API exposes both application-friendly JSON and Prometheus text formats.
-- The Blazor Server UI uses MudBlazor charts and keeps a short in-memory history for them.
-- Docker Compose can host the UI behind NGINX while the API runs on the monitored host.
+- Platform-specific collectors read host metrics through operating-system APIs and utilities.
+- `SystemMetricsService` shares a cached sample between every output.
+- The dashboard keeps a short in-memory history for its live charts.
+- The core collection logic is isolated from the web host and covered by tests.
+- NGINX remains an optional reverse-proxy example; metric collection always runs natively on the monitored machine.
 
 ## Run locally
 
 Requirements:
 
 - [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0), version 10.0.300 or newer
-- Docker, only for the containerized UI and NGINX option
+- Docker, only for the optional NGINX proxy
 
-Start the API on the machine you want to monitor:
+Start LocalMetrics on the machine you want to monitor:
 
-```bash
-dotnet run --project src/LocalMetrics.Api
-```
+~~~bash
+dotnet run --project src/LocalMetrics.App
+~~~
 
-For a fully local development run, open another terminal and start the UI:
+Open `http://localhost:5050`.
 
-```bash
-dotnet run --project src/LocalMetrics.UI
-```
+To place NGINX in front of the native application, allow the proxy container to reach it:
 
-Open `http://localhost:5133`.
-
-To run the UI through Docker and NGINX, the containers need to reach the API on the host. Start the API with an explicit container-accessible binding:
-
-```bash
-dotnet run --project src/LocalMetrics.Api -- --urls http://0.0.0.0:5050
-```
-
-Then start the UI and reverse proxy:
-
-```bash
+~~~bash
+dotnet run --project src/LocalMetrics.App -- --urls http://0.0.0.0:5050
 docker compose up --build
-```
+~~~
 
-Open `http://localhost`. NGINX is published only on the host loopback interface. On systems that still use Compose v1, run `docker-compose up --build` instead.
+Then open `http://localhost`. Use the container-accessible binding only on a trusted development machine with an appropriate firewall.
 
-## API
+## Endpoints
 
 | Endpoint | Purpose |
 | --- | --- |
-| `GET /api/systemmetrics` | Current CPU, memory and disk sample as JSON |
+| `GET /api/systemmetrics` | Current CPU, memory, and disk sample as JSON |
 | `GET /metrics` | The same sample in Prometheus text format |
-| `GET /swagger` | Interactive API documentation in the Development environment |
-
-The API listens on port `5050` by default. For example:
-
-```bash
-curl http://localhost:5050/api/systemmetrics
-curl http://localhost:5050/metrics
-```
+| `GET /swagger` | Interactive API documentation in Development |
 
 ## Tests and CI
 
-Run the complete suite with:
-
-```bash
+~~~bash
 dotnet test LocalMetrics.sln --configuration Release
-```
+~~~
 
-GitHub Actions builds the solution, runs the unit tests and exercises the native collector on Linux, Windows and macOS.
+GitHub Actions builds the solution, runs the tests, and exercises the native collector on Linux, Windows, and macOS.
 
-## Scope and limitations
+## Scope
 
-LocalMetrics intentionally focuses on a single machine and a small set of live metrics. It does not provide persistence, authentication, alerting, remote fleet management or production-grade telemetry storage. Local runs bind to `127.0.0.1`; the Docker command above opts into `0.0.0.0` so containers can reach the host API and should be used only on a trusted development machine with an appropriate firewall.
+LocalMetrics monitors one machine and intentionally keeps no historical telemetry. It is a focused demonstration of native cross-platform collection, ASP.NET Core API design, Prometheus integration, and a server-rendered Blazor interface—not a replacement for a production observability platform.
 
 Contributions and bug reports are welcome through issues and pull requests.
