@@ -1,0 +1,11 @@
+@LocalMetrics.App_HostAddress = http://localhost:5050
+
+GET {{LocalMetrics.App_HostAddress}}/api/systemmetrics
+Accept: application/json
+
+###
+
+GET {{LocalMetrics.App_HostAddress}}/metrics
+Accept: text/plain
+
+###

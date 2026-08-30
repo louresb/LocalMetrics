@@ -1,0 +1,45 @@
+@page "/"
+
+<PageTitle>LocalMetrics</PageTitle>
+
+<div class="py-4">
+    <p class="text-uppercase text-primary fw-semibold mb-2">Native host monitoring</p>
+    <h1 class="display-5 fw-semibold">See this machine's essential metrics in real time.</h1>
+    <p class="lead text-secondary col-lg-8">
+        LocalMetrics collects CPU, memory, and disk usage from Windows, Linux, or macOS
+        and exposes the same samples through a Blazor dashboard, JSON API, and Prometheus endpoint.
+    </p>
+
+    <div class="d-flex flex-wrap gap-2 mt-4">
+        <a class="btn btn-primary" href="/dashboard">Open dashboard</a>
+        <a class="btn btn-outline-secondary" href="/swagger" target="_blank">Explore API</a>
+        <a class="btn btn-outline-secondary" href="/metrics" target="_blank">Prometheus metrics</a>
+    </div>
+</div>
+
+<div class="row g-4 py-4">
+    <div class="col-12 col-md-4">
+        <section class="p-4 bg-white rounded shadow-sm h-100">
+            <h2 class="h5">Native collection</h2>
+            <p class="text-secondary mb-0">
+                Platform-specific collectors read operating-system data instead of browser or container metrics.
+            </p>
+        </section>
+    </div>
+    <div class="col-12 col-md-4">
+        <section class="p-4 bg-white rounded shadow-sm h-100">
+            <h2 class="h5">Single process</h2>
+            <p class="text-secondary mb-0">
+                One ASP.NET Core host serves collection, API endpoints, and the interactive dashboard.
+            </p>
+        </section>
+    </div>
+    <div class="col-12 col-md-4">
+        <section class="p-4 bg-white rounded shadow-sm h-100">
+            <h2 class="h5">Observable by default</h2>
+            <p class="text-secondary mb-0">
+                The current sample is available as JSON and in Prometheus exposition format.
+            </p>
+        </section>
+    </div>
+</div>

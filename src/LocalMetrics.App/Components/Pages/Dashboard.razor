@@ -1,0 +1,225 @@
+@page "/dashboard"
+@implements IAsyncDisposable
+@inject SystemMetricsService MetricsService
+@inject ILogger<Dashboard> Logger
+
+<PageTitle>Dashboard - LocalMetrics</PageTitle>
+
+<header class="dashboard-header">
+    <div>
+        <p class="eyebrow">Live system telemetry</p>
+        <h1>Monitoring this machine</h1>
+        <p class="text-secondary mb-0">Native metrics refresh every five seconds.</p>
+    </div>
+    @if (_lastSuccessfulAt is not null)
+    {
+        <p class="last-updated">Updated @_lastSuccessfulAt.Value.ToLocalTime().ToString("T")</p>
+    }
+</header>
+
+@if (_isLoading && _metrics is null)
+{
+    <div class="loading-state">
+        <MudProgressCircular Color="Color.Primary" Size="Size.Large" Indeterminate="true" />
+        <span>Collecting the first sample…</span>
+    </div>
+}
+else if (_metrics is null)
+{
+    <div class="alert alert-warning" role="alert">
+        Metrics are temporarily unavailable. LocalMetrics will keep trying to collect them.
+    </div>
+}
+else
+{
+    @if (!_isCollectorAvailable)
+    {
+        <div class="alert alert-warning" role="status">
+            Collection is temporarily unavailable. Showing the last successful sample.
+        </div>
+    }
+
+    <div class="metrics-grid">
+        <section class="metric-card">
+            <div class="metric-card__heading">
+                <div>
+                    <h2>CPU</h2>
+                    <p>Processor utilization</p>
+                </div>
+                <strong>@($"{_metrics.CpuUsage:F1}%")</strong>
+            </div>
+            <div class="chart-container">
+                <MudChart T="double"
+                          ChartType="ChartType.Line"
+                          ChartOptions="@_lineChartOptions"
+                          ChartSeries="@_cpuSeries"
+                          ChartLabels="@_timeLabels"
+                          Height="220px"
+                          Width="100%" />
+            </div>
+        </section>
+
+        <section class="metric-card">
+            <div class="metric-card__heading">
+                <div>
+                    <h2>Memory</h2>
+                    <p>Physical memory utilization</p>
+                </div>
+                <strong>@($"{_metrics.RamUsage:F1}%")</strong>
+            </div>
+            <div class="chart-container">
+                <MudChart T="double"
+                          ChartType="ChartType.Line"
+                          ChartOptions="@_lineChartOptions"
+                          ChartSeries="@_memorySeries"
+                          ChartLabels="@_timeLabels"
+                          Height="220px"
+                          Width="100%" />
+            </div>
+        </section>
+
+        <section class="metric-card">
+            <div class="metric-card__heading">
+                <div>
+                    <h2>Disk</h2>
+                    <p>System volume utilization</p>
+                </div>
+                <strong>@($"{_metrics.DiskUsage:F1}%")</strong>
+            </div>
+            <div class="chart-container disk-chart">
+                <MudChart T="double"
+                          ChartType="ChartType.Pie"
+                          ChartOptions="@_pieChartOptions"
+                          ChartSeries="@_diskSeries"
+                          ChartLabels="@_diskLabels"
+                          Height="220px"
+                          Width="100%" />
+            </div>
+            <div class="disk-legend" aria-label="Disk chart legend">
+                <span><i class="used"></i>Used</span>
+                <span><i class="free"></i>Free</span>
+            </div>
+        </section>
+    </div>
+}
+
+@code {
+    private const int MaximumSamples = 24;
+    private readonly CancellationTokenSource _cancellationTokenSource = new();
+    private readonly List<SystemMetrics> _history = [];
+    private readonly List<ChartSeries<double>> _cpuSeries = [new() { Name = "CPU" }];
+    private readonly List<ChartSeries<double>> _memorySeries = [new() { Name = "Memory" }];
+    private readonly List<ChartSeries<double>> _diskSeries = [new() { Name = "Disk" }];
+    private readonly string[] _diskLabels = ["Used", "Free"];
+    private readonly LineChartOptions _lineChartOptions = new()
+    {
+        ShowLegend = false,
+        ShowDataMarkers = false,
+        ShowToolTips = true,
+        LineStrokeWidth = 3,
+        MaxNumYAxisTicks = 5,
+        YAxisRequireZeroPoint = true,
+        YAxisSuggestedMax = 100,
+        YAxisFormat = "0'%'"
+    };
+    private readonly PieChartOptions _pieChartOptions = new()
+    {
+        ShowLegend = false,
+        ShowToolTips = true,
+        ShowValues = false
+    };
+    private SystemMetrics? _metrics;
+    private PeriodicTimer? _timer;
+    private Task? _refreshTask;
+    private string[] _timeLabels = [];
+    private bool _isLoading = true;
+    private bool _isCollectorAvailable;
+    private DateTime? _lastSuccessfulAt;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadMetricsAsync();
+        _timer = new PeriodicTimer(TimeSpan.FromSeconds(5));
+        _refreshTask = RefreshLoopAsync();
+    }
+
+    private async Task RefreshLoopAsync()
+    {
+        try
+        {
+            while (await _timer!.WaitForNextTickAsync(_cancellationTokenSource.Token))
+            {
+                await InvokeAsync(async () =>
+                {
+                    await LoadMetricsAsync();
+                    StateHasChanged();
+                });
+            }
+        }
+        catch (OperationCanceledException) when (_cancellationTokenSource.IsCancellationRequested)
+        {
+        }
+    }
+
+    private async Task LoadMetricsAsync()
+    {
+        try
+        {
+            var sample = await Task.Run(
+                MetricsService.GetCurrentMetrics,
+                _cancellationTokenSource.Token);
+
+            _metrics = sample;
+            _isCollectorAvailable = true;
+            _lastSuccessfulAt = sample.Timestamp;
+            _history.Add(sample);
+
+            if (_history.Count > MaximumSamples)
+            {
+                _history.RemoveAt(0);
+            }
+
+            UpdateCharts();
+        }
+        catch (OperationCanceledException) when (_cancellationTokenSource.IsCancellationRequested)
+        {
+        }
+        catch (Exception exception)
+        {
+            _isCollectorAvailable = false;
+            Logger.LogWarning(exception, "Unable to collect the current system metrics sample.");
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private void UpdateCharts()
+    {
+        if (_metrics is null)
+        {
+            return;
+        }
+
+        _timeLabels = _history
+            .Select(sample => sample.Timestamp.ToLocalTime().ToString("HH:mm:ss"))
+            .ToArray();
+        _cpuSeries[0].Data = _history.Select(sample => (double)sample.CpuUsage).ToArray();
+        _memorySeries[0].Data = _history.Select(sample => (double)sample.RamUsage).ToArray();
+        _diskSeries[0].Data = new[] { (double)_metrics.DiskUsage, 100d - _metrics.DiskUsage };
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        await _cancellationTokenSource.CancelAsync();
+        _timer?.Dispose();
+
+        if (_refreshTask is not null)
+        {
+            await _refreshTask;
+        }
+
+        _cancellationTokenSource.Dispose();
+    }
+}

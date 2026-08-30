@@ -6,9 +6,6 @@
 # dotenv files
 .env
 
-# Generated self-contained application bundles belong in GitHub Releases, not source control.
-src/LocalMetrics.UI/wwwroot/downloads/
-
 # User-specific files
 *.rsuser
 *.suo
